@@ -1,6 +1,7 @@
 require('dotent').config();
 const express = require("express");
 const app = express();
+const displayRoutes = require("express-routemap");
 const bodyParser = require("body-parser");
 const port = process.env.PORT;
 const sequelize = require("./config/db");
@@ -9,6 +10,8 @@ const sequelize = require("./config/db");
 
 
 
+app.use("/api/v1/user", userRoutes); 
+app.use(cors());
 app.use(bodyParser.json());
  sequelize
    .authenticate()

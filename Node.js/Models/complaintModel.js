@@ -13,7 +13,7 @@ const Compliant = sequelize.define("compliants", {
     allowNull: false,
     primaryKey: true,
   },
-  userId: {
+  user_id: {
     type: DataTypes.STRING,
     allowNull: false,
   },
