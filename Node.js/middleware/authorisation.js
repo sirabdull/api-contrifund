@@ -3,11 +3,11 @@ const jwt = require("jsonwebtoken");
 const jwtSecret = process.env.JWT_SECRET || "keep-secret-secure123#";
 
 const authorization = async (req, res, next) => {
-  const { Authorization } = req.headers;
-  if (!Authorization) {
+  const { Authorisation } = req.headers;
+  if (!Authorisation) {
     res.status(401).send({
       status: false,
-      message: "Unauthorized Access",
+      message: "Unauthorized Access1",
     });
   } else {
     const tokenSplit = Authorization.split(" ");
