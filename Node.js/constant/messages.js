@@ -1,4 +1,4 @@
-const messages = {
+module.exports = {
   loginMessage: "User logged-in successfully",
   registerMessage:
     " Your account has been created successfully, an otp has been sent to your email and phone",
@@ -7,5 +7,4 @@ const messages = {
   invalidOtp: "Invalid otp",
 };
 
-module.exports = { messages
-                   };
+

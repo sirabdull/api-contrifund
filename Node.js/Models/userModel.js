@@ -21,7 +21,7 @@ const User = sequelize.define("user", {
     unique: true,
   },
   phone: {
-    type: DataTypes.STRING(20),
+    type: DataTypes.STRING(30),
     allowNull: false,
     unique: true,
   },
@@ -73,11 +73,11 @@ const User = sequelize.define("user", {
     allowNull: false,
   },
   nextofkin_surname: {
-    type: DataTypes.STRING(70),
+    type: DataTypes.STRING(100),
     allowNull: true,
   },
   nextofkin_othernames: {
-    type: DataTypes.STRING(70),
+    type: DataTypes.STRING(100),
     allowNull: true,
   },
   nextofkin_relationship: {
@@ -89,7 +89,7 @@ const User = sequelize.define("user", {
     allowNull: true,
   },
   nextofkin_address_street: {
-    type: DataTypes.STRING(70),
+    type: DataTypes.STRING(100),
     allowNull: true,
   },
   nextofkin_address_city: {
