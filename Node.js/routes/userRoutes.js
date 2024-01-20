@@ -13,11 +13,11 @@ const {
 
 router.post("/create", createAccount);
 router.post("/login", userLogin);
- router.delete("/deleteUser/:user_id", authorization, deleteUser);
+ router.delete("/deleteUser/:user_id", deleteUser);
 
 router.get("/getUsers", getAllUsers);
 router.put("/updateUser/:user_id", updateUserDetails);
-router.patch("/verify/:phone/:email", verifyAccount);
+router.patch("/verify/:email/:otp", verifyAccount);
 router.get("/getUser/:user_id",  getUserDetails);
 
 module.exports = router;
