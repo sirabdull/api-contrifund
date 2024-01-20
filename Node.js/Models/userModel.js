@@ -28,11 +28,11 @@ const User = sequelize.define("user", {
   gender: {
     type: DataTypes.ENUM,
     values: ["male", "female"],
-    allowNull: false,
+    allowNull: true,
   },
   dob: {
     type: DataTypes.DATE,
-    allowNull: false,
+    allowNull: true,
   },
   address_number: {
     type: DataTypes.STRING,

@@ -37,6 +37,14 @@ app.listen(port, () => {
   displayRoutes(app);
 });
 
+// sequelize
+//   .sync({force:true})
+//   .then(() => {
+//     console.log('Database synchronized');
+//   })
+//   .catch((error) => {
+//     console.error('Error synchronizing the database:', error);
+//   });
   
 app.use((req, res) => {
   res.status(404).json({

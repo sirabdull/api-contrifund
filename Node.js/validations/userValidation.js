@@ -5,7 +5,7 @@ const createValidation = (data) => {
   surname: Joi.string().required(),
   othernames: Joi.string().required(),
   email: Joi.string().email().required(),
-   dob: Joi.date().required(),
+  
   phone: Joi.string().min(11).required().label("Phone number").messages({
     "string.empty": `"Phone Number" cannot be an empty`,
     "string.min": `"Phone Number should have length of 11 digits`,
@@ -23,7 +23,7 @@ const createValidation = (data) => {
       "object.regex": `Must have at least 8 characters`,
       "string.pattern.base": `Password must contain at least a number, letter and special characters`,
     }),
-  gender: Joi.string().required(),
+  
 });
 return createSchema.validate(data)
 }
@@ -67,16 +67,16 @@ const validateLogin = (data) => {
 });
 return loginSchema.validate(data)
 };
-const changePassword = Joi.object({
+const changePassword = (data)=>{
+ const changePasswordSchema = Joi.object({
   newPassword: Joi.string().required(),
   confirmNewPassword: Joi.string().required(),
 });
-
+return changePasswordSchema.validate(data)
+}
 const updateUserProfile = (data)=> {
   const updateShema = Joi.object({
-  surname: Joi.string(),
-  othernames: Joi.string(),
- dob: Joi.date().required(),     
+     
   gender: Joi.string(),
   address_number: Joi.string(),
   address_street: Joi.string(),

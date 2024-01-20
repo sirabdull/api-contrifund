@@ -8,7 +8,8 @@ const {
   createValidation,
   completeForgotPasswordValidation,
   validateLogin,
-  updateUserProfile
+  updateUserProfile,
+  changePassword
 
 } = require("../validations/userValidation");
 const OtpEnum = require("../constant/enums");
@@ -30,7 +31,7 @@ const createAccount = async (req, res) => {
     return;
   }
   try {
-    const { surname, othernames, email, phone, dob, gender, password } =
+    const { surname, othernames, email, phone, password } =
       req.body;
     const checkIfUserExist = await UserModel.findAll({
       attributes: ["email", "phone"],
@@ -51,9 +52,7 @@ const createAccount = async (req, res) => {
       user_id: userID,
       surname: surname,
       othernames: othernames,
-      gender: gender,
       phone: phone,
-      dob: dob,
       email: email,
       password_hash: hash,
       password_salt: salt,
@@ -86,52 +85,40 @@ const createAccount = async (req, res) => {
   }
 };
 
-const verifyAccount = (req, res) => {
-  const { email, phone } = req.params;
 
-  if (!email || !phone) {
-    res.status(400).json({
-      status: false,
-      message: invalidMessage,
-    });
-    return;
-  }
+const verifyAccount = async (req, res) => {
+  const { email, otp } = req.params;
   try {
-    const otpData = async (req, res) => {
-      await OtpModel.findOne({
-        where: {
-          email_or_phone: email,
-          otp: otp,
-          otpType: OtpEnum.REGISTRATIOn,
-        },
-      });
-      if (!otpData) {
-        res.status(400).json({
-          status: false,
-          message: invalidOtp,
-        });
-        return;
-      }
+    if (!email || !otp) throw new Error(invalidOtp);
 
-     await UserModel.update({
-            isOtpVerified: true
-        }, {
-            where: {
-               email: email
-            }
-        })
+    await OtpModel.findOne({
+      where: {
+        email_or_phone: email,
+        otp: otp,
+        otpType:OtpEnum.EGISTRATION,
+      },
+    });
+    if (!otpData) throw new Error(invalidOtp);
 
-        
-        
-      
-      await OtpModel.destroy({
+    await UserModel.update(
+      {
+        isOtpVerified: true,
+      },
+      {
         where: {
           email: email,
-          otp,
-          otpType: OtpEnum.REGISTRATION,
         },
-      })
-    };
+      }
+    );
+    console.log("isOtpVerified", isOtpVerified);
+    await OtpModel.destroy({
+      where: {
+        email: email,
+        otp,
+        otpType: OtpEnum.EGISTRATION,
+      },
+    });
+
     res.status(200).json({
       status: true,
       message: "Account verified successfully",
@@ -143,6 +130,64 @@ const verifyAccount = (req, res) => {
     });
   }
 };
+
+// const verifyAccount = (req, res) => {
+//   const { email, otp } = req.params;
+
+//   if (!email || !otp) {
+//     res.status(400).json({
+//       status: false,
+//       message: invalidOtp,
+//     });
+//     return;
+//   }
+//   try {
+//     const otpData = async (req, res) => {
+//       await OtpModel.findOne({
+//         where: {
+//           email_or_phone: email,
+//           otp: otp,
+//           otpType: OtpEnum.REGISTRATIOn,
+//         },
+//       });
+//       if (!otpData) {
+//         res.status(400).json({
+//           status: false,
+//           message: invalidOtp,
+//         });
+//         return;
+//       }
+
+//       await UserModel.update({
+//         isOtpVerified: true,
+//       }, {
+//         where: {
+//           email: email,
+//         },
+//       });
+// console.log('isOtpVerified', isOtpVerified)
+//       await OtpModel.destroy({
+//         where: {
+//           email: email,
+//           otp,
+//           otpType: OtpEnum.REGISTRATION,
+//         },
+//       })
+//     };
+//     res.status(200).json({
+//       status: true,
+//       message: "Account verified successfully",
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       status: false,
+//       message: error.message || "internal service error",
+//     });
+//   }
+// };
+
+
+
 
 const getUserDetails = async (req, res) => {
   const { user_id } = req.params;
@@ -199,7 +244,7 @@ const updateUserDetails = async (req, res) => {
   }
   const { error } = updateUserProfile(req.body);
   if (error !== undefined) {
-    res.status(400).json({
+  return  res.status(400).json({
       status: false,
       message: error.details[0].message || "bad request",
     });
