@@ -9,10 +9,13 @@ const {
   completeForgotPasswordValidation,
   validateLogin,
   updateUserProfile,
-  changePassword
+  validateChangePassword 
 
 } = require("../validations/userValidation");
-const OtpEnum = require("../constant/enums");
+
+const jwt = require("jsonwebtoken");
+const {OtpEnum} = require("../constant/enums");
+const {transporter} = require('../service/email');
 const {
   registerMessage,
   loginMessage,
@@ -69,7 +72,7 @@ const createAccount = async (req, res) => {
 
     //send as sms
     //send as email
-    // sendEmail(email, "OTP", `Hi ${surname}, your otp is ${_otp}`)
+    transporter(email, "OTP", `Hi ${surname}, your otp is ${_otp}`)
     // sendSms(phone, "OTP", `Hi ${surname}, your otp is ${_otp}`)
 
     res.status(201).json({
@@ -91,14 +94,17 @@ const verifyAccount = async (req, res) => {
   try {
     if (!email || !otp) throw new Error(invalidOtp);
 
-    await OtpModel.findOne({
+    const otpData = await OtpModel.findOne({
       where: {
         email_or_phone: email,
         otp: otp,
-        otpType:OtpEnum.EGISTRATION,
+        otp_type: OtpEnum.REGISTRATION,
       },
     });
+    console.log('OtpEnum', OtpEnum)
+
     if (!otpData) throw new Error(invalidOtp);
+ const isOtpVerified = otpData.isOtpVerified === true
 
     await UserModel.update(
       {
@@ -113,9 +119,9 @@ const verifyAccount = async (req, res) => {
     console.log("isOtpVerified", isOtpVerified);
     await OtpModel.destroy({
       where: {
-        email: email,
+        email_or_phone: email,
         otp,
-        otpType: OtpEnum.EGISTRATION,
+        otp_type: OtpEnum.REGISTRATION,
       },
     });
 
@@ -131,52 +137,44 @@ const verifyAccount = async (req, res) => {
   }
 };
 
-// const verifyAccount = (req, res) => {
-//   const { email, otp } = req.params;
 
-//   if (!email || !otp) {
+
+
+// const getUserDetails = async (req, res) => {
+//   const { user_id } = req.params;
+//   if (!user_id) {
 //     res.status(400).json({
 //       status: false,
-//       message: invalidOtp,
+//       message: "bad request",
 //     });
 //     return;
 //   }
 //   try {
-//     const otpData = async (req, res) => {
-//       await OtpModel.findOne({
-//         where: {
-//           email_or_phone: email,
-//           otp: otp,
-//           otpType: OtpEnum.REGISTRATIOn,
-//         },
+//     const user = await UserModel.findOne({
+//       attributes: [
+//         "surname",
+//         "othernames",
+//         "email",
+//         "phone",
+//         "password",
+//         "dob",
+//         "gender",
+//       ],
+//       where: {
+//         user_id: user_id,
+//       },
+//     });
+//     if (!user) {
+//       res.status(400).json({
+//         status: false,
+//         message: "User does not exist",
 //       });
-//       if (!otpData) {
-//         res.status(400).json({
-//           status: false,
-//           message: invalidOtp,
-//         });
-//         return;
-//       }
-
-//       await UserModel.update({
-//         isOtpVerified: true,
-//       }, {
-//         where: {
-//           email: email,
-//         },
-//       });
-// console.log('isOtpVerified', isOtpVerified)
-//       await OtpModel.destroy({
-//         where: {
-//           email: email,
-//           otp,
-//           otpType: OtpEnum.REGISTRATION,
-//         },
-//       })
-//     };
+//       return;
+//     }
 //     res.status(200).json({
 //       status: true,
-//       message: "Account verified successfully",
+//       message: "User's details fetched successfully",
+//       data: user
 //     });
 //   } catch (error) {
 //     res.status(500).json({
@@ -186,62 +184,10 @@ const verifyAccount = async (req, res) => {
 //   }
 // };
 
-
-
-
-const getUserDetails = async (req, res) => {
-  const { user_id } = req.params;
-  if (!user_id) {
-    res.status(400).json({
-      status: false,
-      message: "bad request",
-    });
-    return;
-  }
-  try {
-    const user = await UserModel.findOne({
-      attributes: [
-        "surname",
-        "othernames",
-        "email",
-        "phone",
-        "password",
-        "dob",
-        "gender",
-      ],
-      where: {
-        user_id: user_id,
-      },
-    });
-    if (!user) {
-      res.status(400).json({
-        status: false,
-        message: "User does not exist",
-      });
-      return;
-    }
-    res.status(200).json({
-      status: true,
-      message: "User's details fetched successfully",
-      data: user
-    });
-  } catch (error) {
-    res.status(500).json({
-      status: false,
-      message: error.message || "internal service error",
-    });
-  }
-};
-
 const updateUserDetails = async (req, res) => {
   const { user_id } = req.params;
-  if (!user_id) {
-    res.status(400).json({
-      status: false,
-      message: "bad request",
-    });
-    return;
-  }
+  if (!user_id) throw new Error('User not found')
+    
   const { error } = updateUserProfile(req.body);
   if (error !== undefined) {
   return  res.status(400).json({
@@ -267,41 +213,74 @@ const updateUserDetails = async (req, res) => {
     });
   }
 };
-const getAllUsers = async (req, res) => {
-  try {
-    const users = await UserModel.findAll();
-    // if (!users) {
-    //   res.status(400).json({
-    //     status: false,
-    //     message: "bad request",
-    //   });
-    //   return;
-    // }
+// const getAllUsers = async (req, res) => {
+//   try {
+//     const users = await UserModel.findAll();
+//     // if (!users) {
+//     //   res.status(400).json({
+//     //     status: false,
+//     //     message: "bad request",
+//     //   });
+//     //   return;
+//     // }
 
-    res.status(200).json({
-      status: true,
-      message: "All users fetched successfully",
-      data:users
-    });
-  } catch (error) {
-    res.status(500).json({
-      status: false,
-      message: error.message || "internal service error",
+//     res.status(200).json({
+//       status: true,
+//       message: "All users fetched successfully",
+//       data:users
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       status: false,
+//       message: error.message || "internal service error",
     
+//     });
+//   }
+// };
+
+const getUsers = async (req, res) => {
+  
+  const { user_id } = req.query;
+  let user;
+  try {
+   
+    if (user_id) {
+      // Fetch a single user based on user_id
+      user = await UserModel.findOne({
+        where: { user_id: user_id }
+      });
+      
+
+      if (!user) {
+        throw new Error('User not found');
+      }
+    } else {
+      // Fetch all users if user_id is not provided
+      const users = await UserModel.findAll();
+
+     return res.status(200).json({
+      status: true,
+        message: user_id ? 'User fetched successfully' : 'All Users fetched successfully',
+        data: user_id ? user : users
+      });
+    }
+  } catch (error) {
+    // Handle errors and respond with an appropriate error message
+    return res.status(500).json({
+      status: false,
+      message: error.message || 'Internal service error',
     });
   }
-};
+  
+ 
+}
+
+
 
 const deleteUser = async (req, res) => {
   const { user_id } = req.params;
-  if (!user_id) {
-    res.status(400).json({
-      status: false,
-      message: "bad request",
-    });
-    return;
-  }
-  try {
+  try{
+  if (!user_id) throw new Error('User not found');
     const user = await UserModel.destroy({
       where: {
         user_id: user_id,
@@ -335,11 +314,12 @@ const userLogin = async (req, res) => {
       message: error.details[0].message || "bad request",
     });
   }
+  try{
   const { email, password } = req.body;
   console.log(password, "password");
   if (!email || !password) throw new Error("All fields are required");
 
-  try {
+  
     const checkIfUserExists = await UserModel.findOne({
       where: { email: email },
     });
@@ -374,12 +354,107 @@ const userLogin = async (req, res) => {
   }
 };
 
+const changePassword = async (req, res) => {
+  const { error } =validateChangePassword (req.body);
+  if (error !== undefined) {
+    res.status(400).json({
+      status: false,
+      message: error.details[0].message || "bad request",
+    });
+  }
+  const { email, oldPassword,  newPassword } = req.body;
+
+  try {
+    const user = await UserModel.findOne({where: {email: email}})
+    // console.log(user)
+    if(!user) throw new Error("User not found")
+    //to check password
+  
+    const matchPassword = await comparePassword(oldPassword, user.password_hash);
+    console.log(matchPassword);
+    //check if the password exist
+    if (matchPassword === null) throw new Error("Old password is needed");
+    //hash the password
+    const {hash, salt} = await hashPassword(newPassword);
+    //update new password
+      await UserModel.update(req.body, {where: {email: email}}
+    
+    );
+    res
+      .status(200)
+      .json({ status: true, message: "Password Updated Successfully", user });
+  } catch (error) {
+    res.status(500).json({ status: false, message: error.message  });
+  }
+};
+
+const startForgetPassword = async(req, res) => {
+  const {email} = req.body
+ try{
+  const user = await UserModel.findOne({where: {email: email}})
+  if(!user) throw new Error("Invalid email")
+ const otp = generateOtp(6)
+ await OtpModel.create({
+       otp_id: uuidv4(),
+       email_or_phone: email,
+       otp: otp
+     });
+       console.log(otp);
+ 
+ res.status(200).json({
+   status: true,
+   message: "Success ",
+   otp
+ })
+}catch (error) {
+  res.status(400).json({
+    status: false,
+    message: error.message
+   })
+}
+ 
+  }
+ 
+  const completeForgetPassword = async(req,res)=>{
+    const { error } = completeForgotPasswordValidation(req.body);
+  if (error !== undefined) {
+    res.status(400).json({
+      status: false,
+      message: error.details[0].message || "bad request",
+    });
+  }
+   const {otp, email, password} = req.body
+   try{
+     const user = 
+       await OtpModel.findOne ({otp: otp, email: email
+     })
+     if(!user) throw new Error ("User does not exist")
+       const { hash, salt } = await hashPassword(password)
+     await UserModel.update ({password_hash: hash, password_salt: salt},{ where:{email: email}})
+     res.status(200).json({
+       status: true,
+       message: "password updated successfully"
+       
+     })
+
+   } catch (error){
+  res.status(500).json({
+   status: false,
+   message: error.message
+  })
+   }
+ }
+ 
+
 module.exports = {
   createAccount,
   userLogin,
   deleteUser,
-  getAllUsers,
+  getUsers,
   updateUserDetails,
   verifyAccount,
-  getUserDetails,
+  changePassword,
+  startForgetPassword,
+  completeForgetPassword 
+  // getUserDetails,
 };
