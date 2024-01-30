@@ -67,7 +67,7 @@ const validateLogin = (data) => {
 });
 return loginSchema.validate(data)
 };
-const changePassword = (data)=>{
+const validateChangePassword = (data)=>{
  const changePasswordSchema = Joi.object({
   newPassword: Joi.string().required(),
   confirmNewPassword: Joi.string().required(),
@@ -95,7 +95,7 @@ return updateShema.validate(data)
 module.exports = {
   createValidation,
   completeForgotPasswordValidation,
-  changePassword,
+  validateChangePassword ,
   updateUserProfile,
   validateLogin,
 };

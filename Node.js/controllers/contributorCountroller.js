@@ -13,7 +13,8 @@ const debitUserAccount = (userId, amount) => {
     narration: 'Payment for service/product'
   };
 
-  const requestOptions = {
+  const requestOptions = {   
+    
     url: 'https://api.flutterwave.com/v3/debit-accounts',
     method: 'POST',
     headers: {

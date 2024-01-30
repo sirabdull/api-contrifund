@@ -32,9 +32,13 @@ contribution_amount:{
         type: DataTypes.DOUBLE(10,2),
         allowNull: false,
     },
-comments: {
+contribution_description: {
         type: DataTypes.TEXT,
         allowNull: true,
+    },
+    contribution_title:{
+        type: DataTypes.STRING(100),
+        allowNull: false,
     },
 members_completed_status: {
         type: DataTypes.ENUM,

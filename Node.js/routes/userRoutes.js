@@ -5,19 +5,19 @@ const {
   createAccount,
   userLogin,
   deleteUser,
-  getAllUsers,
+  getUsers,
   updateUserDetails,
   verifyAccount,
-  getUserDetails,
+  // getUserDetails,
 } = require("../controllers/userController");
 
 router.post("/create", createAccount);
 router.post("/login", userLogin);
  router.delete("/deleteUser/:user_id", deleteUser);
 
-router.get("/getUsers", getAllUsers);
+router.get("/getUsers/:user_id?", getUsers);
 router.put("/updateUser/:user_id", updateUserDetails);
 router.patch("/verify/:email/:otp", verifyAccount);
-router.get("/getUser/:user_id",  getUserDetails);
+// router.get("/getUser/:user_id",  getUserDetails);
 
 module.exports = router;
